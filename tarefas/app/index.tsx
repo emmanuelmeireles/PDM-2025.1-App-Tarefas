@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import Parse from 'parse/react-native';
+
 
 export default function App() {
   const [tarefa, setTarefa] = useState('');
@@ -71,7 +73,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   secondaryButton: {
-    backgroundColor: '',
+    backgroundColor: 'red',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+
   },
   buttonText: {
     color: '#ffffff',
