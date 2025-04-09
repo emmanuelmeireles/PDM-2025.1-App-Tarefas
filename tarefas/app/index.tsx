@@ -1,17 +1,52 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Parse from 'parse/react-native';
 
+Parse.setAsyncStorage(AsyncStorage);
+Parse.initialize(
+  'bWUyhKYu77rn6F6DWJnZ2WWQ4vHhKJ91rg5j4pIb',
+  'cf5SLn1oFj7Jq0m3e3BqsIR1IqarxaBFn6Z2wbF6'
+);
+Parse.serverURL = 'https://parseapi.back4app.com';
 
 export default function App() {
   const [tarefa, setTarefa] = useState('');
   const [listaTarefas, setListaTarefas] = useState([]);
   const [mostrarTarefas, setMostrarTarefas] = useState(false);
 
-  const adicionarTarefa = () => {
+  const adicionarTarefa = async () => {
     if (tarefa.trim() !== '') {
-      setListaTarefas([...listaTarefas, { id: Date.now().toString(), nome: tarefa }]);
-      setTarefa('');
+      const Tarefa = Parse.Object.extend('Tarefa');
+      const novaTarefa = new Tarefa();
+      novaTarefa.set('nome', tarefa);
+
+      try {
+        const resultado = await novaTarefa.save();
+        setListaTarefas([...listaTarefas, { id: resultado.id, nome: tarefa }]);
+        setTarefa('');
+        console.log('Tarefa salva com sucesso!');
+      } catch (error) {
+        console.error('Erro ao salvar tarefa:', error.message);
+      }
+    }
+  };
+
+  const listarTarefas = async () => {
+    const Tarefa = Parse.Object.extend('Tarefa');
+    const query = new Parse.Query(Tarefa);
+
+    try {
+      const resultados = await query.find();
+      const tarefas = resultados.map((item) => ({
+        id: item.id,
+        nome: item.get('nome'),
+      }));
+      setListaTarefas(tarefas);
+      setMostrarTarefas(true);
+      console.log('Tarefas carregadas com sucesso!');
+    } catch (error) {
+      console.error('Erro ao carregar tarefas:', error.message);
     }
   };
 
@@ -29,7 +64,7 @@ export default function App() {
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.button, styles.secondaryButton]}
-        onPress={() => setMostrarTarefas(!mostrarTarefas)}
+        onPress={listarTarefas}
       >
         <Text style={styles.buttonText}>{mostrarTarefas ? 'Ocultar Tarefas' : 'Listar Tarefas'}</Text>
       </TouchableOpacity>
@@ -48,45 +83,40 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: 'g',
+    backgroundColor: 'lightgray',
   },
   title: {
-    fontSize: 50,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 70,
+    marginBottom: 20,
     textAlign: 'center',
-    color: 'red',
+    color: 'black',
   },
   input: {
-    borderWidth: 5,
+    borderWidth: 1,
     borderColor: 'black',
-    padding: 20,
-    marginBottom: 70,
-    borderRadius:  10,
+    padding: 10,
+    marginBottom: 20,
+    borderRadius: 5,
     backgroundColor: 'white',
   },
   button: {
-    backgroundColor: 'red',
+    backgroundColor: 'blue',
     padding: 10,
     marginBottom: 10,
     borderRadius: 5,
     alignItems: 'center',
   },
   secondaryButton: {
-    backgroundColor: 'red',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-
+    backgroundColor: 'gray',
   },
   buttonText: {
     color: '#ffffff',
-    fontSize: 30,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   tarefa: {
-    fontSize: 20,
+    fontSize: 16,
     marginTop: 10,
     padding: 10,
     backgroundColor: '#bbdefb',
